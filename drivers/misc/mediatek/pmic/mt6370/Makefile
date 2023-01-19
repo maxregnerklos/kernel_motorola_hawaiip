@@ -1,3 +1,5 @@
+ccflags-y := -Wno-unused-but-set-variable
+
 subdir-ccflags-y += -Wall -Werror
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/typec/tcpc/inc
 subdir-ccflags-y += -I$(srctree)/drivers/power/supply/mediatek/misc

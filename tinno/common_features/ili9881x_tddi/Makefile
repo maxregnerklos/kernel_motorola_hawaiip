@@ -3,6 +3,7 @@ BUILD_PLATFORM := mtk
 BUILD_MODULE := n
 
 ccflags-y += -Wall
+ccflags-y := -Wno-unused-but-set-variable
 
 ifeq ($(BUILD_PLATFORM),mtk)
 platform=ilitek_v3_mtk

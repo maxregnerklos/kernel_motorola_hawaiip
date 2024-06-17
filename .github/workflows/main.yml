@@ -1,12 +1,7 @@
 name: Build Kernel
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build-kernel:
@@ -16,25 +11,38 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Check for kernel changes
+      id: check_changes
+      run: |
+        git fetch origin main
+        git diff --name-only origin/main..HEAD | grep -q '^mrkernel/' || echo "no changes" > no_changes.txt
+
+    - name: Stop if no changes
+      if: steps.check_changes.outputs.changes == ''
+      run: echo "No changes detected in the mrkernel directory. Stopping build process."
+
     - name: Install dependencies
+      if: steps.check_changes.outputs.changes != ''
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev
 
     - name: Clone Kernel source
+      if: steps.check_changes.outputs.changes != ''
       run: |
         git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
         cd linux
         git checkout v5.14
 
- 
 
     - name: Package Kernel
+      if: steps.check_changes.outputs.changes != ''
       run: |
         cd linux
         tar -czvf ../mrkernel.tar.gz .
 
     - name: Upload Kernel
+      if: steps.check_changes.outputs.changes != ''
       uses: actions/upload-artifact@v2
       with:
         name: mrkernel

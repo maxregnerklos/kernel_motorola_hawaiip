@@ -1,38 +1,49 @@
-name: Build Kernel
+name: Upstream to Kernel 5.4
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build-kernel:
+  update_kernel:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Install dependencies
-        if: steps.check_changes.outputs.changes != ''
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev
 
-      - name: Clone Kernel source
-        if: steps.check_changes.outputs.changes != ''
-        run: |
-          git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
-          cd linux
-          git checkout v5.14
+    - name: Download Kernel 5.4
+      run: |
+        wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.tar.xz
+        tar -xf linux-5.4.tar.xz
 
-      - name: Package Kernel
-        if: steps.check_changes.outputs.changes != ''
-        run: |
-          cd linux
-          tar -czvf ../mrkernel.tar.gz .
+    - name: Prepare for merging
+      run: |
+        cd linux-5.4
+        make mrproper
 
-      - name: Upload Kernel
-        if: steps.check_changes.outputs.changes != ''
-        uses: actions/upload-artifact@v2
-        with:
-          name: mrkernel
-          path: mrkernel.tar.gz
+    - name: Merge current repo changes into Kernel 5.4
+      run: |
+        rsync -av --progress --exclude=.git --exclude=.github ../ linux-5.4/
+        cd linux-5.4
+        git init
+        git add .
+        git commit -m "Merging current repo changes into Kernel 5.4"
+
+    - name: Zip the updated kernel
+      run: |
+        cd linux-5.4
+        zip -r ../updated_kernel_5.4.zip .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: updated-kernel-5.4
+        path: updated_kernel_5.4.zip

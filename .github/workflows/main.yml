@@ -17,25 +17,23 @@ jobs:
     - name: Set up environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev
+        sudo apt-get install -y wget xz-utils
 
     - name: Download Kernel 5.4
       run: |
         wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.tar.xz
         tar -xf linux-5.4.tar.xz
 
-    - name: Prepare for merging
-      run: |
-        cd linux-5.4
-        make mrproper
-
     - name: Merge current repo changes into Kernel 5.4
       run: |
-        rsync -av --progress --exclude=.git --exclude=.github ../ linux-5.4/
+        rsync -av --progress --exclude=.git --exclude=.github --exclude=linux-5.4 . linux-5.4/
         cd linux-5.4
         git init
         git add .
-        git commit -m "Merging current repo changes into Kernel 5.4"
+        git commit -m "Initial commit for Kernel 5.4"
+        git remote add origin ../.git
+        git fetch origin main
+        git merge origin/main --strategy-option theirs --allow-unrelated-histories --no-edit
 
     - name: Zip the updated kernel
       run: |

@@ -17,7 +17,7 @@ jobs:
     - name: Set up environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget xz-utils
+        sudo apt-get install -y wget xz-utils rsync zip
 
     - name: Download Kernel 5.4
       run: |
